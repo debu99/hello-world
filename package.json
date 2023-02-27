@@ -4,6 +4,7 @@
   "description": "Hello world app for github action workflow",
   "main": "index.js",
   "scripts": {
+    "lint": "echo 'npm run lint'",
     "test": "sleep 1",
     "start": "node app.js"
   },
