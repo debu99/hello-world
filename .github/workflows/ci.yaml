@@ -10,6 +10,12 @@ on:
       - main
 
 jobs:
+  test-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: npm --version
+
   install:
     runs-on: ubuntu-latest
     steps:
@@ -63,7 +69,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: debug
         run: pwd && ls -al
 
