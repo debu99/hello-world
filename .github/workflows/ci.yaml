@@ -39,6 +39,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: debug
+        run: pwd && ls -al
       - name: Restore dependencies cache
         uses: actions/cache@v3
         with:
@@ -48,13 +50,16 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Run lint
-        run: npm lint
+        run: npm run lint
 
   test:
     needs: [install]
     runs-on: ubuntu-latest
 
     steps:
+      - name: debug
+        run: pwd && ls -al
+
       - name: Restore dependencies cache
         uses: actions/cache@v2
         with:
