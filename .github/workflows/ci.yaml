@@ -80,7 +80,7 @@ jobs:
         run: npm install
       - name: Run tests
         run: |
-              npm run start &
+              sudo npm run start &
               endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
               for endpoint in "${endpoints[@]}"; do
                 echo "[INFO] endpoint=${endpoint}"
