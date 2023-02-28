@@ -20,15 +20,28 @@ jobs:
         uses: Azure/setup-helm@v3
         with:
           version: 'v3.8.2'
-      - name: Deploy to staging
-        if: github.ref == 'refs/heads/staging' && github.event.workflow_run.head_branch == 'staging' && !contains(github.event.workflow_run.head_commit.message, '[RELEASE]') && !contains(github.event.workflow_run.head_commit.message, '[HOTFIX]')
+
+      - name: check staging hotfix
+        if: github.ref == 'refs/heads/staging' && (startsWith(tolower(github.head_ref), 'hotfix/') || contains(tolower(github.event.head_commit.message), '[hotfix]'))
         run: |
+          echo "[INFO] Hotfix branch detected in staging"
+
+      - name: check staging release
+        if: github.ref == 'refs/heads/staging' && (startsWith(tolower(github.head_ref), 'release/') || contains(tolower(github.event.head_commit.message), '[release]'))
+        run: |
+          echo "[INFO] Release branch detected in staging"
+
+      - name: Deploy to staging
+        if: github.ref == 'refs/heads/staging' && !(startsWith(tolower(github.head_ref), 'hotfix/') || contains(tolower(github.event.head_commit.message), '[hotfix]')) && !(startsWith(tolower(github.head_ref), 'release/') || contains(tolower(github.event.head_commit.message), '[release]')) 
+        run: |
+          echo "[INFO] Hotfix branch detected"
           helm version
           #helm upgrade --install my-app-staging ./helm-chart -f ./helm-chart/values.staging.yaml
 
       - name: Deploy to production
-        if: github.ref == 'refs/heads/main' && github.event.workflow_run.head_branch == 'main' && (contains(github.event.workflow_run.head_commit.message, '[RELEASE]') || contains(github.event.workflow_run.head_commit.message, '[HOTFIX]'))
+        if: github.ref == 'refs/heads/main'
         run: |
+          echo "[INFO] main branch detected"
           helm version
           #helm upgrade --install my-app-prod ./helm-chart -f ./helm-chart/values.prod.yaml
 
