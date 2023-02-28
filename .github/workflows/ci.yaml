@@ -85,11 +85,11 @@ jobs:
               for endpoint in "${endpoints[@]}"; do
                 echo "[INFO] endpoint=${endpoint}"
                 status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://localhost:3000/hello)
-                if [[ $status_code != "200" ]]; then
-                  echo "[ERROR] endpoint=${endpoint} status_code=${response}"
-                  exit 1
+                if [[ $status_code == "200" ]]; then
+                  echo "[INFO] status_code=${status_code}"
                 else
-                  echo "[INFO] status_code=${response}"
+                  echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+                  exit 1
                 fi
               done
 
@@ -108,16 +108,17 @@ jobs:
           netstat -antlp | grep LISTEN
           nc -vv -w 3 127.0.0.1 3000 || true
       - name: Test app
+        continue-on-error: false
         run: |
               endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
               for endpoint in "${endpoints[@]}"; do
                 echo "[INFO] endpoint=${endpoint}"
                 status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://localhost:3000/hello)
-                if [[ $status_code != "200" ]]; then
-                  echo "[ERROR] endpoint=${endpoint} status_code=${response}"
-                  exit 1
+                if [[ $status_code == "200" ]]; then
+                  echo "[INFO] status_code=${status_code}"
                 else
-                  echo "[INFO] status_code=${response}"
+                  echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+                  exit 1
                 fi
               done
 
