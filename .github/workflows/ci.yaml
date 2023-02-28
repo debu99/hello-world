@@ -81,6 +81,12 @@ jobs:
       - name: Run tests
         run: |
               sudo npm run start &
+              sudo apt update -yqq && sudo apt install net-tools netcat -yqq
+              netstat -antlp | grep LISTEN
+              nc -vv -w 3 127.0.0.1 3000 || true
+      - name: Test app
+        continue-on-error: false
+        run: |
               endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
               for endpoint in "${endpoints[@]}"; do
                 echo "[INFO] endpoint=${endpoint}"
@@ -92,6 +98,7 @@ jobs:
                   exit 1
                 fi
               done
+
 
   e2e:
     runs-on: ubuntu-latest
@@ -121,7 +128,6 @@ jobs:
                   exit 1
                 fi
               done
-
 
   build:
     runs-on: ubuntu-latest
