@@ -166,8 +166,7 @@ jobs:
           docker push "${{env.IMAGE}}:${{env.GIT_HASH}}"
           docker push "${{env.IMAGE}}:latest"
 
-
-  test:
+  debug:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' }}
     needs:
