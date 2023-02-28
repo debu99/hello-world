@@ -22,17 +22,17 @@ jobs:
           version: 'v3.8.2'
 
       - name: check staging hotfix
-        if: github.ref == 'refs/heads/staging' && (startsWith(tolower(github.head_ref), 'hotfix/') || contains(tolower(github.event.head_commit.message), '[hotfix]'))
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]'))
         run: |
           echo "[INFO] Hotfix branch detected in staging"
 
       - name: check staging release
-        if: github.ref == 'refs/heads/staging' && (startsWith(tolower(github.head_ref), 'release/') || contains(tolower(github.event.head_commit.message), '[release]'))
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]'))
         run: |
           echo "[INFO] Release branch detected in staging"
 
       - name: Deploy to staging
-        if: github.ref == 'refs/heads/staging' && !(startsWith(tolower(github.head_ref), 'hotfix/') || contains(tolower(github.event.head_commit.message), '[hotfix]')) && !(startsWith(tolower(github.head_ref), 'release/') || contains(tolower(github.event.head_commit.message), '[release]')) 
+        if: github.ref == 'refs/heads/staging' && !(startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]')) && !(startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]')) 
         run: |
           echo "[INFO] not Hotfix/Release branch"
           helm version
