@@ -31,3 +31,12 @@ jobs:
         run: |
           helm version
           #helm upgrade --install my-app-prod ./helm-chart -f ./helm-chart/values.prod.yaml
+
+      - name: Smoke test
+        env:
+          APP_DOMAIN: "https://app.vic510.click"
+          APP_PORT: "8000"
+          APP_NAMESPACE: "dev"
+          HEALTHCHECK_URL: '/health'
+        run: |
+          echo "smoke test"

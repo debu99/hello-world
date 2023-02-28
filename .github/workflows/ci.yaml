@@ -85,19 +85,9 @@ jobs:
               netstat -antlp | grep LISTEN
               nc -vv -w 3 127.0.0.1 3000 || true
       - name: Test app
-        continue-on-error: false
-        run: |
-              endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
-              for endpoint in "${endpoints[@]}"; do
-                echo "[INFO] endpoint=${endpoint}"
-                status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://localhost:3000/hello)
-                if [[ $status_code == "200" ]]; then
-                  echo "[INFO] status_code=${status_code}"
-                else
-                  echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
-                  exit 1
-                fi
-              done
+        env:
+          URL: localhost:3000
+        uses: ./.github/templates/test_app.yml
 
   e2e:
     runs-on: ubuntu-latest
@@ -114,20 +104,9 @@ jobs:
           netstat -antlp | grep LISTEN
           nc -vv -w 3 127.0.0.1 3000 || true
       - name: Test app
-        continue-on-error: false
-        run: |
-              endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
-              for endpoint in "${endpoints[@]}"; do
-                echo "[INFO] endpoint=${endpoint}"
-                status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://localhost:3000/hello)
-                if [[ $status_code == "200" ]]; then
-                  echo "[INFO] status_code=${status_code}"
-                else
-                  echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
-                  exit 1
-                fi
-              done
-
+        env:
+          URL: localhost:3000
+        uses: ./.github/templates/test_app.yml
   build:
     runs-on: ubuntu-latest
     needs: [lint, unit_test, test, e2e]

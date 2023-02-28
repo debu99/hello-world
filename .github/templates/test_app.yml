@@ -1,0 +1,15 @@
+steps:
+  - name: Test app
+    continue-on-error: false
+    run: |
+      endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
+      for endpoint in "${endpoints[@]}"; do
+        echo "[INFO] endpoint=${endpoint}"
+        status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://${URL}${endpoint})
+        if [[ $status_code == "200" ]]; then
+          echo "[INFO] status_code=${status_code}"
+        else
+          echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+          exit 1
+        fi
+      done
