@@ -132,6 +132,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: [lint, unit_test, test, e2e]
+    if: ${{ github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' }}
     env:
       DOCKER_USER: debu99
       DOCKER_REPO: hello-world
