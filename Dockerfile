@@ -7,7 +7,7 @@ COPY package-lock.json .
 RUN npm install
 
 FROM node:16.14-alpine as runner
-
+RUN apk add --upgrade --no-cache zlib
 WORKDIR /app
 
 COPY --from=builder /app/node_modules ./node_modules
