@@ -1,4 +1,4 @@
-name: CI
+name: CICD
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
   pull_request:
     branches:
       - main
-      - staging
 
 jobs:
   install:
@@ -166,3 +165,73 @@ jobs:
           echo "[INFO]IMAGE=${{env.IMAGE}} GIT_HASH=${{env.GIT_HASH}} "
           docker push "${{env.IMAGE}}:${{env.GIT_HASH}}"
           docker push "${{env.IMAGE}}:latest"
+
+
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    steps:
+      - name: check staging hotfix
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]'))
+        run: |
+          echo "[INFO] Hotfix branch detected in staging"
+
+      - name: check staging release
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]'))
+        run: |
+          echo "[INFO] Release branch detected in staging"
+
+  staging_deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/staging' && !(startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]')) && !(startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]')) }}
+    needs:
+    - build
+    steps:
+      - name: Setup Helm
+        uses: Azure/setup-helm@v3
+        with:
+          version: 'v3.8.2'
+
+      - name: Deploy to staging
+        run: |
+          echo "[INFO] not Hotfix/Release branch"
+          helm version
+          #helm upgrade --install my-app-staging ./helm-chart -f ./helm-chart/values.staging.yaml
+
+      - name: Smoke test
+        env:
+          APP_DOMAIN: "https://app.vic510.click"
+          APP_PORT: "8000"
+          APP_NAMESPACE: "dev"
+          HEALTHCHECK_URL: '/health'
+        run: |
+          echo "staging smoke test"
+
+  prod_deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    environment: 'prod'
+    steps:
+      - name: Setup Helm
+        uses: Azure/setup-helm@v3
+        with:
+          version: 'v3.8.2'
+
+      - name: Deploy to production
+        run: |
+          echo "[INFO] main branch detected"
+          helm version
+          #helm upgrade --install my-app-prod ./helm-chart -f ./helm-chart/values.prod.yaml
+
+      - name: Smoke test
+        env:
+          APP_DOMAIN: "https://app.vic510.click"
+          APP_PORT: "8000"
+          APP_NAMESPACE: "dev"
+          HEALTHCHECK_URL: '/health'
+        run: |
+          echo "prod smoke test"
