@@ -87,7 +87,18 @@ jobs:
       - name: Test app
         env:
           URL: localhost:3000
-        uses: ./.github/templates/test_app.yml
+        run: |
+          endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
+          for endpoint in "${endpoints[@]}"; do
+            echo "[INFO] endpoint=${endpoint}"
+            status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://${URL}${endpoint})
+            if [[ $status_code == "200" ]]; then
+              echo "[INFO] status_code=${status_code}"
+            else
+              echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+              exit 1
+            fi
+          done
 
   e2e:
     runs-on: ubuntu-latest
@@ -106,7 +117,18 @@ jobs:
       - name: Test app
         env:
           URL: localhost:3000
-        uses: ./.github/templates/test_app.yml
+        run: |
+          endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
+          for endpoint in "${endpoints[@]}"; do
+            echo "[INFO] endpoint=${endpoint}"
+            status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://${URL}${endpoint})
+            if [[ $status_code == "200" ]]; then
+              echo "[INFO] status_code=${status_code}"
+            else
+              echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+              exit 1
+            fi
+          done
   build:
     runs-on: ubuntu-latest
     needs: [lint, unit_test, test, e2e]
