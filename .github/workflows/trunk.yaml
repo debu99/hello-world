@@ -145,28 +145,11 @@ jobs:
           ref=`curl -L -s -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/$owner/$repo/commits/$GITHUB_SHA/pulls | jq -re '.[].head.ref'` || true
           ref=`echo "$ref" | tr '[:upper:]' '[:lower:]'`
           echo "[INFO] ref=$ref"
-          pr_url=`curl -L -s -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/$owner/$repo/commits/$GITHUB_SHA/pulls | jq -re '.[].url'` || true
-
-          if [[ ! -z $pr_url ]] && [[ $pr_url != 'null' ]]; then
-            last_commit_msg=`curl -L -s -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" $pr_url/commits | jq -re '.[-1].commit.message'`
-            last_commit_msg=`echo "$last_commit_msg" | tr '[:upper:]' '[:lower:]'`
-            echo "[INFO] last_commit_msg=$last_commit_msg"
-            if [[ "${last_commit_msg}" == *[patch]* ]]; then
-              version_type=patch
-            elif [[ "${last_commit_msg}" == *[minor]* ]]; then
-              version_type=minor
-            elif [[ "${last_commit_msg}" == *[major]* ]]; then
-              version_type=major
-            else
-              version_type=minor
-            fi
-          else
-            version_type=patch
-          fi
 
           if [[ -z $ref ]] || [[ $ref == 'null' ]]; then
             echo "[WARN] The commit doesn't have PR"
             skip_staging=false
+            version_type=patch
           elif [[ $ref =~ ^hotfix/ ]]; then
             echo "[INFO] The commit comes from hotfix: ref=$ref"
             skip_staging=true
@@ -178,8 +161,27 @@ jobs:
           else
             echo "[INFO] The commit's PR is not hotfix/release: ref=$ref"
             skip_staging=false
+            version_type=minor
           fi
-          echo "[INFO] skip_staging=$skip_staging version_type=$version_type"
+          echo "[INFO] skip_staging=$skip_staging version_type=$version_type" 
+          
+          pr_url=`curl -L -s -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/$owner/$repo/commits/$GITHUB_SHA/pulls | jq -re '.[].url'` || true
+          if [[ ! -z $pr_url ]] && [[ $pr_url != 'null' ]]; then
+            last_commit_msg=`curl -L -s -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" $pr_url/commits | jq -re '.[-1].commit.message'`
+            last_commit_msg=`echo "$last_commit_msg" | tr '[:upper:]' '[:lower:]'`
+            echo "[INFO] last_commit_msg=$last_commit_msg"
+            if [[ "${last_commit_msg}" == *[patch]* ]]; then
+              version_type=patch
+            elif [[ "${last_commit_msg}" == *[minor]* ]]; then
+              version_type=minor
+            elif [[ "${last_commit_msg}" == *[major]* ]]; then
+              version_type=major
+            fi
+          else
+            version_type=patch
+          fi
+          
+          echo "[INFO] version_type=$version_type"
           echo "skip_staging=$skip_staging" >> $GITHUB_OUTPUT
           echo "version_type=$version_type" >> $GITHUB_OUTPUT
     outputs:
@@ -214,7 +216,7 @@ jobs:
         run: |
           echo "[INFO] get current version..."
           cat package.json | jq .version
-          echo "[INFO] new_version=${{ env.new_version }}"
+          echo "[INFO] version_type=${{env.VERSION_TYPE}} new_version=${{ env.new_version }}"
           sed -i "s/\"version\": \".*\"/\"version\": \"${{ env.new_version }}\"/" package.json
           echo "[INFO] verify new version..."
           cat package.json | jq .version
