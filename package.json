@@ -1,6 +1,6 @@
 {
   "name": "hello-world",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Hello world app for github action workflow",
   "main": "index.js",
   "scripts": {
