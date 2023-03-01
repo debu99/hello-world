@@ -165,7 +165,7 @@ jobs:
           ref=`echo "$ref" | tr '[:upper:]' '[:lower:]'`
           echo "[INFO] ref=$ref"
           if [[ -z $ref ]] || [[ $ref == 'null' ]]; then
-            echo "[WARN] The commit doesn't have PR: ref=$ref"
+            echo "[WARN] The commit doesn't have PR"
             skip_staging=false
           elif [[ $ref =~ ^hotfix/ ]]; then
             echo "[INFO] The commit comes from hotfix: ref=$ref"
@@ -279,7 +279,7 @@ jobs:
       SKIP_STAGING: ${{ needs.check_commit.outputs.skip_staging }}
     steps:
       - name: Echo
-        run: echo "[INFO] SKIP_STAGING=${{ env.SKIP_STAGING == 'false' }}"
+        run: echo "[INFO] SKIP_STAGING=${{ env.SKIP_STAGING }}"
 
       - name: Setup Helm
         if: ${{ env.SKIP_STAGING == 'false' }}
