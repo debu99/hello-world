@@ -254,4 +254,3 @@ jobs:
           HEALTHCHECK_URL: '/health'
         run: |
           echo "prod smoke test"
-
