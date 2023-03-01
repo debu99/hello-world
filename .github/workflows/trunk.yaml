@@ -1,0 +1,259 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Cache node modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: [install]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run lint
+        run: npm run lint
+
+  unit_test:
+    runs-on: ubuntu-latest
+    needs: [install]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run tests
+        run: npm test
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [install]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run tests
+        run: |
+              sudo npm run start &
+              sudo apt update -yqq && sudo apt install net-tools netcat -yqq
+              netstat -antlp | grep LISTEN
+              nc -vv -w 3 127.0.0.1 3000 || true
+      - name: Test app
+        env:
+          URL: localhost:3000
+        run: |
+          endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
+          for endpoint in "${endpoints[@]}"; do
+            echo "[INFO] endpoint=${endpoint}"
+            status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://${URL}${endpoint})
+            if [[ $status_code == "200" ]]; then
+              echo "[INFO] status_code=${status_code}"
+            else
+              echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+              exit 1
+            fi
+          done
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [install]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run docker-compose
+        run: |
+          docker-compose up --build -d --quiet-pull --no-color
+          sudo apt update -yqq && sudo apt install net-tools netcat -yqq
+          docker-compose logs
+          docker-compose ps
+          netstat -antlp | grep LISTEN
+          nc -vv -w 3 127.0.0.1 3000 || true
+      - name: Test app
+        env:
+          URL: localhost:3000
+        run: |
+          endpoints=("/hello" "/ping" "/current-date" "/fibo/1")
+          for endpoint in "${endpoints[@]}"; do
+            echo "[INFO] endpoint=${endpoint}"
+            status_code=$(curl --write-out '%{http_code}' -s --output /dev/null http://${URL}${endpoint})
+            if [[ $status_code == "200" ]]; then
+              echo "[INFO] status_code=${status_code}"
+            else
+              echo "[ERROR] endpoint=${endpoint} status_code=${status_code}"
+              exit 1
+            fi
+          done
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, unit_test, test, e2e]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    env:
+      DOCKER_USER: debu99
+      DOCKER_REPO: hello-world
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Create env
+        run: |
+          export IMAGE="${DOCKER_USER}/${DOCKER_REPO}"
+          export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "GIT_HASH=$GIT_HASH" >> $GITHUB_ENV
+      - name: Build the image
+        id: build
+        run: |
+          docker build --file Dockerfile -t "${{env.IMAGE}}:${{env.GIT_HASH}}" -t "${{env.IMAGE}}:latest" .
+          docker images | grep ${{env.IMAGE}}
+      - name: Scan the image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{env.DOCKER_USER}}/${{env.DOCKER_REPO}}:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+      - name: Push the image
+        run: |
+          docker images | grep ${{env.IMAGE}}
+          docker login -u ${{env.DOCKER_USER}} -p ${{ secrets.DOCKER_PASSWORD }}
+          echo "[INFO]IMAGE=${{env.IMAGE}} GIT_HASH=${{env.GIT_HASH}} "
+          docker push "${{env.IMAGE}}:${{env.GIT_HASH}}"
+          docker push "${{env.IMAGE}}:latest"
+
+  debug:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    steps:
+      - name: check staging hotfix
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]'))
+        run: |
+          echo "[INFO] Hotfix branch detected in staging"
+
+      - name: check staging release
+        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]'))
+        run: |
+          echo "[INFO] Release branch detected in staging"
+
+  check_commit:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    steps:
+      - name: Check commit
+        id: check_commit
+        run: |
+          echo "[INFO] checking commit"
+          ref=`curl -L -s -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/debu99/hello-world/commits/$GITHUB_SHA/pulls | jq '.[].head.ref'`
+          ref=`echo "$ref" | tr '[:upper:]' '[:lower:]'`
+          title=`curl -L -s  -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/debu99/hello-world/commits/$GITHUB_SHA/pulls | jq '.[].title'`
+          title=`echo "$title" | tr '[:upper:]' '[:lower:]'`
+          if [[ -z $ref ]] || [[ $ref == 'null' ]]; then
+            echo "[WARN] The commit doesn't have PR: ref=$ref title=$title"
+            echo "from_hotfix=false" >> $GITHUB_OUTPUT
+          elif [[ $title == "[hotfix]"* ]] || [[ $title == "[release]"* ]] || [[ $ref == "hotfix/"* ]] || [[ $ref == "release/"* ]]; then
+            echo "[INFO] The commit comes from hotfix/release: ref=$ref title=$title"
+            echo "from_hotfix=true" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      from_hotfix: ${{ steps.check_commit.outputs.from_hotfix }}
+  staging_deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'false' }}
+    needs:
+    - build
+    steps:
+      - name: Setup Helm
+        uses: Azure/setup-helm@v3
+        with:
+          version: 'v3.8.2'
+
+      - name: Deploy to staging
+        run: |
+          echo "[INFO] not Hotfix/Release branch"
+          helm version
+          #helm upgrade --install my-app-staging ./helm-chart -f ./helm-chart/values.staging.yaml
+
+      - name: Smoke test
+        env:
+          APP_DOMAIN: "https://app.vic510.click"
+          APP_PORT: "8000"
+          APP_NAMESPACE: "dev"
+          HEALTHCHECK_URL: '/health'
+        run: |
+          echo "staging smoke test"
+
+  prod_deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'true' }}
+    needs:
+    - build
+    environment: 'prod'
+    steps:
+      - name: Setup Helm
+        uses: Azure/setup-helm@v3
+        with:
+          version: 'v3.8.2'
+
+      - name: Deploy to production
+        run: |
+          echo "[INFO] main branch detected"
+          helm version
+          #helm upgrade --install my-app-prod ./helm-chart -f ./helm-chart/values.prod.yaml
+
+      - name: Smoke test
+        env:
+          APP_DOMAIN: "https://app.vic510.click"
+          APP_PORT: "8000"
+          APP_NAMESPACE: "dev"
+          HEALTHCHECK_URL: '/health'
+        run: |
+          echo "prod smoke test"
