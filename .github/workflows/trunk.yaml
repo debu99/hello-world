@@ -183,10 +183,10 @@ jobs:
           if [[ -z $ref ]] || [[ $ref == 'null' ]]; then
             echo "[WARN] The commit doesn't have PR: ref=$ref"
             echo "skip_staging=false" >> $GITHUB_OUTPUT
-          elif [[ $ref == "hotfix/"* ]]; then
+          elif [[ $ref =~ ^hotfix/ ]]; then
             echo "[INFO] The commit comes from hotfix: ref=$ref"
             echo "skip_staging=true" >> $GITHUB_OUTPUT
-          elif [[ $ref == "release/"* ]]; then
+          elif [[ $ref =~ ^release/ ]]; then
             echo "[INFO] The commit comes from release: ref=$ref"
             echo "skip_staging=true" >> $GITHUB_OUTPUT
           else
