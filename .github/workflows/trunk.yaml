@@ -168,13 +168,13 @@ jobs:
           pr_url=`curl -L -s -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/$owner/$repo/commits/$GITHUB_SHA/pulls | jq -re '.[].url'` || true
           if [[ ! -z $pr_url ]] && [[ $pr_url != 'null' ]]; then
             last_commit_msg=`curl -L -s -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.PGH_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" $pr_url/commits | jq -re '.[-1].commit.message'`
-            last_commit_msg=`echo "$last_commit_msg" | tr '[:upper:]' '[:lower:]'`
+            last_commit_msg=`echo "$last_commit_msg" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]'`
             echo "[INFO] last_commit_msg=$last_commit_msg"
-            if [[ "${last_commit_msg}" == *[patch]* ]]; then
+            if [[ "${last_commit_msg}" == [patch]* ]]; then
               version_type=patch
-            elif [[ "${last_commit_msg}" == *[minor]* ]]; then
+            elif [[ "${last_commit_msg}" == [minor]* ]]; then
               version_type=minor
-            elif [[ "${last_commit_msg}" == *[major]* ]]; then
+            elif [[ "${last_commit_msg}" == [major]* ]]; then
               version_type=major
             fi
           else
@@ -214,14 +214,15 @@ jobs:
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
       - name: Bump version
         run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git pull
           echo "[INFO] get current version..."
           cat package.json | jq .version
           echo "[INFO] version_type=${{env.VERSION_TYPE}} new_version=${{ env.new_version }}"
           sed -i "s/\"version\": \".*\"/\"version\": \"${{ env.new_version }}\"/" package.json
           echo "[INFO] verify new version..."
           cat package.json | jq .version
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
           git status
           git add package.json
           git commit -m "[skip ci][GithubAction] Bump version to ${{env.new_version}}"
