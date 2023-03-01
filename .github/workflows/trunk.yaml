@@ -206,6 +206,7 @@ jobs:
           fi
     outputs:
       from_hotfix: ${{ steps.check_commit.outputs.from_hotfix }}
+
   staging_deploy:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'false' }}
@@ -237,7 +238,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'true' }}
     needs:
     - build
-    - staging
+    - staging_deploy
     environment: 'prod'
     steps:
       - name: Setup Helm
