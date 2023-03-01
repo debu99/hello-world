@@ -137,7 +137,7 @@ jobs:
         id: check_commit
         shell: bash
         run: |
-          echo "[INFO] checking commit"
+          echo "[INFO] checking commit..."
           owner_and_repo=${{ github.repository }}
           owner=$(echo $owner_and_repo | cut -d/ -f1)
           repo=$(echo $owner_and_repo | cut -d/ -f2)
@@ -178,6 +178,7 @@ jobs:
             echo "[INFO] The commit's PR is not hotfix/release: ref=$ref"
             skip_staging=false
           fi
+          echo "[INFO] skip_staging=$skip_staging version_type=$version_type"
           echo "skip_staging=$skip_staging" >> $GITHUB_OUTPUT
           echo "version_type=$version_type" >> $GITHUB_OUTPUT
     outputs:
@@ -220,8 +221,8 @@ jobs:
           git config --global user.name "GitHub Actions"
           git status
           git add package.json
-          git status
           git commit -m "[skip ci][GithubAction] Bump version to ${{env.new_version}}"
+          git push origin -o skip.ci
           git tag -a "v${{ env.new_version }}" -m "Version v${{ env.new_version }}"
           git push origin "v${{ env.new_version }}"
     outputs:
