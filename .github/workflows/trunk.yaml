@@ -166,22 +166,6 @@ jobs:
           docker push "${{env.IMAGE}}:${{env.GIT_HASH}}"
           docker push "${{env.IMAGE}}:latest"
 
-  debug:
-    runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
-    needs:
-    - build
-    steps:
-      - name: check staging hotfix
-        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'hotfix/') || contains(github.event.head_commit.message, '[hotfix]'))
-        run: |
-          echo "[INFO] Hotfix branch detected in staging"
-
-      - name: check staging release
-        if: github.ref == 'refs/heads/staging' && (startsWith(github.head_ref, 'release/') || contains(github.event.head_commit.message, '[release]'))
-        run: |
-          echo "[INFO] Release branch detected in staging"
-
   check_commit:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -209,7 +193,7 @@ jobs:
 
   staging_deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'false' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     needs:
     - build
     - check_commit
@@ -220,12 +204,14 @@ jobs:
           version: 'v3.8.2'
 
       - name: Deploy to staging
+        if: ${{ needs.check_commit.outputs.from_hotfix == 'false' }}
         run: |
           echo "[INFO] not Hotfix/Release branch"
           helm version
           #helm upgrade --install my-app-staging ./helm-chart -f ./helm-chart/values.staging.yaml
 
       - name: Smoke test
+        if: ${{ needs.check_commit.outputs.from_hotfix == 'false' }}
         env:
           APP_DOMAIN: "https://app.vic510.click"
           APP_PORT: "8000"
