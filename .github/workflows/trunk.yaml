@@ -236,6 +236,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' && needs.check_commit.outputs.from_hotfix == 'true' }}
     needs:
     - build
+    - staging
     environment: 'prod'
     steps:
       - name: Setup Helm
