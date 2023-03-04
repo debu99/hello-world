@@ -69,8 +69,8 @@ jobs:
         id: test
         run: |
           echo "start smoke test..."          
-          chmod +x ./.github/workflows/deploy.sh
-          source ./.github/workflows/deploy.sh
+          chmod +x ./.github/workflows/function.sh
+          source ./.github/workflows/function.sh
           healthCheck ${{ inputs.APP_NAME }} ${{ inputs.APP_PORT }} ${{ inputs.HEALTHCHECK_URL }} ${{ inputs.APP_NAMESPACE }}
           echo "test_status=$test_status" >> $GITHUB_OUTPUT
     outputs:
