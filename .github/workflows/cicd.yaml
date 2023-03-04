@@ -158,8 +158,12 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
+          load: true
           push: false
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            APP_VERSIOn=${{env.GIT_HASH}}
           tags: |
             ${{env.IMAGE}}:${{env.GIT_HASH}}
             ${{env.IMAGE}}:latest
