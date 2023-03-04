@@ -1,0 +1,60 @@
+name: CD
+
+on:
+  workflow_call:
+    inputs:
+      NEW_VERSION:
+        required: true
+        type: string
+      APP_NAMESPACE:
+        required: true
+        type: string
+      APP_DOMAIN_NAME:
+        required: true
+        type: string
+      APP_PORT:
+        default: 8080
+        required: false
+        type: number
+      HEALTHCHECK_URL:
+        default: '/health'
+        required: false
+        type: string
+    outputs:
+      helm_status:
+        description: "The helm deployment status"
+        value: ${{ jobs.deploy.outputs.helm_status }}
+      test_status:
+        description: "The after deployment test status"
+        value: ${{ jobs.deploy.outputs.test_status }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print debug info
+        run: |
+          echo "environment=${{ inputs.environment }}"
+          echo "NEW_VERSION=${{ inputs.NEW_VERSION }}"
+          echo "APP_NAMESPACE=${{ inputs.APP_NAMESPACE }} APP_DOMAIN_NAME=${{ inputs.APP_DOMAIN_NAME }} APP_PORT=${{ inputs.APP_PORT }} HEALTHCHECK_URL=${{ inputs.HEALTHCHECK_URL }}"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Helm
+        uses: Azure/setup-helm@v3
+        with:
+          version: 'v3.8.2'
+      - name: Deploy to production
+        id: helm
+        run: |
+          echo "NEW_VERSION=${{ inputs.NEW_VERSION }}"
+          helm version
+          #helm upgrade --install my-app-prod ./helm-chart -f ./helm-chart/values.prod.yaml
+          echo "helm_status=$helm_status" >> $GITHUB_OUTPUT
+      - name: Smoke test
+        id: test
+        run: |
+          echo "prod smoke test"
+          echo "test_status=$test_status" >> $GITHUB_OUTPUT
+    outputs:
+      helm_status: ${{ steps.helm.outputs.helm_status }}
+      test_status: ${{ steps.test.outputs.test_status }}
