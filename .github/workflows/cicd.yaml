@@ -202,12 +202,13 @@ jobs:
     - build
     uses: ./.github/workflows/template_cd.yaml
     with:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
       APP_PORT: "8000"
       APP_NAMESPACE: "develop"
       HEALTHCHECK_URL: '/health'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
   staging_deploy:
     if: ${{ github.ref == 'refs/heads/staging' }}
@@ -215,12 +216,13 @@ jobs:
     - build
     uses: ./.github/workflows/template_cd.yaml
     with:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
       APP_PORT: "8000"
       APP_NAMESPACE: "staging"
       HEALTHCHECK_URL: '/health'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
   prod_deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -228,11 +230,12 @@ jobs:
     - build
     uses: ./.github/workflows/template_cd.yaml
     with:
-      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
       ENVIRONMENT: prod
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
       APP_PORT: "8000"
       APP_NAMESPACE: "prod"
       HEALTHCHECK_URL: '/health'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
