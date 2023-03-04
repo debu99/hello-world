@@ -139,7 +139,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
     env:
       DOCKER_USER: debu99
-      DOCKER_REPO: hello-world
+      DOCKER_REPO: helloworld
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -204,10 +204,10 @@ jobs:
     with:
       ENVIRONMENT: dev
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
-      APP_DOMAIN_NAME: "https://app.vic510.click"
-      APP_PORT: "8000"
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
       APP_NAMESPACE: "develop"
-      HEALTHCHECK_URL: '/health'
+      HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
@@ -219,10 +219,10 @@ jobs:
     with:
       ENVIRONMENT: staging
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
-      APP_DOMAIN_NAME: "https://app.vic510.click"
-      APP_PORT: "8000"
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
       APP_NAMESPACE: "staging"
-      HEALTHCHECK_URL: '/health'
+      HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
@@ -234,10 +234,10 @@ jobs:
     with:
       ENVIRONMENT: prod
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
-      APP_DOMAIN_NAME: "https://app.vic510.click"
-      APP_PORT: "8000"
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
       APP_NAMESPACE: "prod"
-      HEALTHCHECK_URL: '/health'
+      HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 

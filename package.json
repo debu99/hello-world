@@ -1,5 +1,5 @@
 {
-  "name": "hello-world",
+  "name": "helloworld",
   "version": "1.0.0",
   "description": "Hello world app for github action workflow",
   "main": "index.js",
