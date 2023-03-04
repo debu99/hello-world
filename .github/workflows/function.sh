@@ -1,5 +1,6 @@
 #!/bin/bash
 function healthCheck() {
+  TIMEOUT=30
   app=$1
   port=$2
   urlPath=$3
