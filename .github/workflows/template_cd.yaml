@@ -63,7 +63,7 @@ jobs:
         id: helm
         run: |
           echo "NEW_VERSION=${{ inputs.NEW_VERSION }}"
-          helm upgrade --install ${{ inputs.APP_NAME }} ./chart -n ${{ inputs.APP_NAMESPACE }} -f ./charts/values.yaml --set deployment.image.tag=${{ inputs.NEW_VERSION }}
+          helm upgrade --install ${{ inputs.APP_NAME }} ./chart -n ${{ inputs.APP_NAMESPACE }} -f ./chart/values.yaml --set deployment.image.tag=${{ inputs.NEW_VERSION }}
           echo "helm_status=$helm_status" >> $GITHUB_OUTPUT
       - name: Smoke test
         id: test

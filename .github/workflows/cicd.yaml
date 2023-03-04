@@ -227,6 +227,21 @@ jobs:
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
+  demo_deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    uses: ./.github/workflows/template_cd.yaml
+    with:
+      ENVIRONMENT: demo
+      NEW_VERSION: ${{ needs.build.outputs.new_tag }}
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
+      APP_NAMESPACE: "demo"
+      HEALTHCHECK_URL: '/hello'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
   prod_deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs:
