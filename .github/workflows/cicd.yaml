@@ -147,6 +147,7 @@ jobs:
         run: |
           export IMAGE="${DOCKER_USER}/${DOCKER_REPO}"
           export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          echo "IMAGE=$IMAGE GIT_HASH=$GIT_HASH"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
           echo "GIT_HASH=$GIT_HASH" >> $GITHUB_ENV
       - name: Set up QEMU
