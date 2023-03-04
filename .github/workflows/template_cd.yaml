@@ -26,7 +26,6 @@ on:
     secrets:
       KUBE_CONFIG:
         required: true
-        type: string
     outputs:
       helm_status:
         description: "The helm deployment status"
