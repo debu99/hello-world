@@ -217,6 +217,7 @@ jobs:
     - build
     uses: ./.github/workflows/template_cd.yaml
     with:
+      environment: prod
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
       APP_PORT: "8000"

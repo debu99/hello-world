@@ -13,11 +13,14 @@ on:
         required: true
         type: string
       APP_PORT:
-        default: 8080
+        default: "8080"
         required: false
-        type: number
+        type: string
       HEALTHCHECK_URL:
         default: '/health'
+        required: false
+        type: string
+      environment:
         required: false
         type: string
     outputs:
@@ -31,6 +34,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'non-prod' }}
     steps:
       - name: Print debug info
         run: |
