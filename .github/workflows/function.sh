@@ -1,4 +1,37 @@
 #!/bin/bash
+
+
+function checkDeploy() {
+  TIMEOUT=30
+  app=$1
+  tag=$2
+  namespace=$3
+  cd $GITHUB_WORKSPACE
+  echo "[INFO] check deployment $app tag=$tag on $namespace..."
+  sleep $TIMEOUT
+  healthcheckOK=0
+  for (( i=1; i<=$TIMEOUT; i++ )); do
+    podName=''
+    podName=`kubectl get pod -l app=${app} -n $namespace | grep Running | grep -E '1/1|2/2|3/3' | head -n1 | awk '{print $1}'` || true
+    if [[ ! -z $podName ]]; then
+      podImage=`kubectl get pod $podName -n $namespace -o json | jq -re '.spec.containers[0].image'`
+      echo "[INFO] Current $podName image is $podImage"
+      if [[ ! -z $podImage ]] && [[ $podImage == *$tag ]]; then
+        healthcheckOK=1
+        break
+      fi
+    fi
+  sleep 10
+  echo "[INFO] Continue next loop..."
+  done
+  if [[ $healthcheckOK -eq 1 ]]; then
+    echo "[INFO] Deployment $app tag=$tag is done......"
+  else
+    echo "[ERROR] Deployment $app tag=$tag is failure......"
+    exit 1
+  fi
+}
+
 function healthCheck() {
   TIMEOUT=30
   app=$1
@@ -6,7 +39,7 @@ function healthCheck() {
   urlPath=$3
   namespace=$4
   cd $GITHUB_WORKSPACE
-  echo "[INFO] Starting healthcheck http://$app:$port$urlPath..."
+  echo "[INFO] Starting healthcheck http://$app:$port$urlPath at namespace=$namespace ..."
   healthcheckOK=0
   for (( i=1; i<=$TIMEOUT; i++ )); do
     #ret=`curl -o /dev/null -s -w "%{http_code}\n" "http://$APP:$PORT$URL_PATH"` || true
