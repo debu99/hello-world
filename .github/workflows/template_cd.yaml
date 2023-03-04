@@ -20,8 +20,12 @@ on:
         default: '/health'
         required: false
         type: string
-      environment:
+      ENVIRONMENT:
         required: false
+        type: string
+    secrets:
+      KUBE_CONFIG:
+        required: true
         type: string
     outputs:
       helm_status:
@@ -34,7 +38,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'non-prod' }}
+    environment: ${{ inputs.ENVIRONMENT || 'non-prod' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
