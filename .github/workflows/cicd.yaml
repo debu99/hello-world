@@ -191,7 +191,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/develop' }}
     needs:
     - build
-    uses: .github/workflows/template_cd@main
+    uses: .github/workflows/template_cd.yaml@main
     with:
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
@@ -203,7 +203,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/staging' }}
     needs:
     - build
-    uses: .github/workflows/template_cd@main
+    uses: .github/workflows/template_cd.yaml@main
     with:
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
@@ -216,7 +216,7 @@ jobs:
     needs:
     - build
     environment: prod
-    uses: .github/workflows/template_cd@main
+    uses: .github/workflows/template_cd.yaml@main
     with:
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_DOMAIN_NAME: "https://app.vic510.click"
