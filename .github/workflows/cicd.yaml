@@ -233,7 +233,7 @@ jobs:
     - build
     uses: ./.github/workflows/template_cd.yaml
     with:
-      ENVIRONMENT: demo
+      ENVIRONMENT: prod
       NEW_VERSION: ${{ needs.build.outputs.new_tag }}
       APP_NAME: "helloworld"
       APP_PORT: "3000"
