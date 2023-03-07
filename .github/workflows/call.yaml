@@ -19,7 +19,7 @@ jobs:
     needs: [install]
     uses: debu99/reusable-workflows/.github/workflows/lint.yaml@main
 
-  unittest:
+  unit_test:
     needs: [install]
     uses: debu99/reusable-workflows/.github/workflows/unittest.yaml@main
 
