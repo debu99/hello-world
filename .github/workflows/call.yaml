@@ -65,7 +65,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/staging' }}
     needs:
     - build
-    uses: ./.github/workflows/template_cd.yaml
+    uses: debu99/reusable-workflows/.github/workflows/cd.yaml@main
     with:
       ENVIRONMENT: staging
       NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
@@ -80,7 +80,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs:
     - build
-    uses: ./.github/workflows/template_cd.yaml
+    uses: debu99/reusable-workflows/.github/workflows/cd.yaml@main
     with:
       ENVIRONMENT: prod
       NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
@@ -95,7 +95,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs:
     - build
-    uses: ./.github/workflows/template_cd.yaml
+    uses: debu99/reusable-workflows/.github/workflows/cd.yaml@main
     with:
       ENVIRONMENT: prod
       NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
