@@ -1,10 +1,6 @@
 name: K8s PR Sandbox Delete
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
   pull_request:
     branches: [develop]
     types: [closed]
