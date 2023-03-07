@@ -60,6 +60,7 @@ jobs:
       HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      GIT_ACCESS_TOKEN: ${{ secrets.PGH_TOKEN }}
 
   staging_deploy:
     if: ${{ github.ref == 'refs/heads/staging' }}
@@ -75,6 +76,7 @@ jobs:
       HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      GIT_ACCESS_TOKEN: ${{ secrets.PGH_TOKEN }}
 
   demo_deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -90,6 +92,7 @@ jobs:
       HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      GIT_ACCESS_TOKEN: ${{ secrets.PGH_TOKEN }}
 
   prod_deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -105,4 +108,5 @@ jobs:
       HEALTHCHECK_URL: '/hello'
     secrets:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      GIT_ACCESS_TOKEN: ${{ secrets.PGH_TOKEN }}
 
