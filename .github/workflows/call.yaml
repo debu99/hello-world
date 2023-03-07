@@ -1,0 +1,108 @@
+name: NodeJS_CICD
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  install:
+    uses: debu99/reusable-workflows/.github/workflows/install.yaml@main
+
+  lint:
+    needs: [install]
+    uses: debu99/reusable-workflows/.github/workflows/lint.yaml@main
+
+  unittest:
+    needs: [install]
+    uses: debu99/reusable-workflows/.github/workflows/unittest.yaml@main
+
+  test:
+    needs: [install]
+    uses: debu99/reusable-workflows/.github/workflows/test.yaml@main
+    with:
+      healthcheck_endpoint: 'localhost:3000'
+      healthcheck_urls: '/hello /ping /current-date /fibo/1'
+
+  e2e:
+    uses: debu99/reusable-workflows/.github/workflows/e2e.yaml@main
+    with:
+      healthcheck_endpoint: 'localhost:3000'
+      healthcheck_urls: '/hello /ping /current-date /fibo/1'
+
+  build:
+    needs: [lint, unit_test, test, e2e]
+    if: ${{ github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+    uses: debu99/reusable-workflows/.github/workflows/build.yaml@main
+    with:
+      DOCKER_USER: 'debu99'
+      DOCKER_REPO: 'helloworld'
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  develop_deploy:
+    if: ${{ github.ref == 'refs/heads/develop' }}
+    needs:
+    - build
+    uses: debu99/reusable-workflows/.github/workflows/cd.yaml@main
+    with:
+      ENVIRONMENT: dev
+      NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
+      APP_NAMESPACE: "develop"
+      HEALTHCHECK_URL: '/hello'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
+  staging_deploy:
+    if: ${{ github.ref == 'refs/heads/staging' }}
+    needs:
+    - build
+    uses: ./.github/workflows/template_cd.yaml
+    with:
+      ENVIRONMENT: staging
+      NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
+      APP_NAMESPACE: "staging"
+      HEALTHCHECK_URL: '/hello'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
+  demo_deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    uses: ./.github/workflows/template_cd.yaml
+    with:
+      ENVIRONMENT: prod
+      NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
+      APP_NAMESPACE: "demo"
+      HEALTHCHECK_URL: '/hello'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
+  prod_deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+    - build
+    uses: ./.github/workflows/template_cd.yaml
+    with:
+      ENVIRONMENT: prod
+      NEW_VERSION: ${{ needs.build.outputs.NEW_TAG }}
+      APP_NAME: "helloworld"
+      APP_PORT: "3000"
+      APP_NAMESPACE: "prod"
+      HEALTHCHECK_URL: '/hello'
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+
