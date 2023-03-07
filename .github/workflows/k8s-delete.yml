@@ -13,4 +13,3 @@ jobs:
       KUBE_NAMESPACE: demo
     secrets:
       KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-      GITHUB_TOKEN: ${{ secrets.PGH_TOKEN }}
